@@ -1,13 +1,13 @@
-import React, {useEffect} from 'react';
+import React from 'react';
 import {View, StyleSheet} from 'react-native';
 import Card from './src/components/TinderCard';
+import users from './assets/data/users';
 
 const App = () => {
   return (
     <View style = {styles.pageContainer}>
-      <Card />
-      
-      </View>
+      <Card user = {users[3]}/>
+    </View>
   ); 
 };
 
