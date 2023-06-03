@@ -15,7 +15,7 @@ const Card = props => {
             </View>
         </ImageBackground>
     </View>  
-    );
+  );
 };
 
 const styles = StyleSheet.create({
