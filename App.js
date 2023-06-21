@@ -1,28 +1,39 @@
 import React from 'react';
-import {View, StyleSheet, Text, Pressable} from 'react-native';
+import {View, StyleSheet, Text, Pressable, useWindowDimensions} from 'react-native';
 import Card from './src/components/TinderCard';
 import users from './assets/data/users';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring, useAnimatedGestureHandler } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, useAnimatedGestureHandler, useDerivedValue, interpolate } from 'react-native-reanimated';
 import { GestureHandlerRootView ,PanGestureHandler } from 'react-native-gesture-handler';
+
+const ROTATION = 60;
 
 const App = () => {
 
+  const { width: screenWidth } = useWindowDimensions();
+  const hiddenTranslateX = 2 * screenWidth;
   const translateX = useSharedValue(0);
+  const rotate = useDerivedValue(() => interpolate(
+    translateX.value,
+    [0, hiddenTranslateX],
+    [0, ROTATION], ) + 'deg');
 
   const cardStyle = useAnimatedStyle(() => ({
     transform: [{
       translateX : translateX.value,
       },
+      {
+        rotate: rotate.value,
+      }
     ],
     opacity: 120, 
   }));
 
   const gestureHandler = useAnimatedGestureHandler({
-    onStart: _ => {
-      console.warn('Touch start');
+    onStart: (_, context) => {
+      context.startX = translateX.value;
     },
-    onActive: event => {
-      translateX.value = event.translationX;
+    onActive: (event, context) => {
+      translateX.value = context.startX + event.translationX;
     },
     onEnd: () => {
       console.warn('Touch Ended');
