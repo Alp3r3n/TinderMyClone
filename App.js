@@ -1,11 +1,12 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {View, StyleSheet, Text, Pressable, useWindowDimensions} from 'react-native';
 import Card from './src/components/TinderCard';
 import users from './assets/data/users';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring, useAnimatedGestureHandler, useDerivedValue, interpolate } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, useAnimatedGestureHandler, useDerivedValue, interpolate, runOnJS,  } from 'react-native-reanimated';
 import { GestureHandlerRootView ,PanGestureHandler } from 'react-native-gesture-handler';
 
 const ROTATION = 60;
+const SWIPE_VELOCITY = 800;
 
 const App = () => {
 
@@ -58,28 +59,42 @@ const App = () => {
     onActive: (event, context) => {
       translateX.value = context.startX + event.translationX;
     },
-    onEnd: () => {
-      console.warn('Touch Ended');
+    onEnd: (event) => {
+      if (Math.abs(event.velocityX) < SWIPE_VELOCITY) {
+        translateX.value = withSpring(0);
+        return;
+      }
+      translateX.value = withSpring(hiddenTranslateX * Math.sign(event.velocityX),
+        {},
+        () => runOnJS(setCurrentIndex)(currentIndex + 1),);
+      runOnJS(setCurrentIndex)(currentIndex + 1);
     },
   });
 
+  useEffect(() => {
+    translateX.value = 0;
+    setNextIndex(currentIndex + 1);
+  }, [currentIndex, translateX]);
+
   return (
-    
       <View style = {styles.pageContainer}>
         <GestureHandlerRootView>
-          <View style = {styles.nextCardContainer}> 
-            <Animated.View style = {[styles.animatedCard, nextCardStyle]}>
-              <Card user = {nextProfile}/>
-            </Animated.View>
-          </View>
-          <PanGestureHandler onGestureEvent = {gestureHandler}>
-            <Animated.View style = {[styles.animatedCard, cardStyle]}>
-              <Card user = {currentProfile}/>
-            </Animated.View>
-          </PanGestureHandler>
-        </GestureHandlerRootView>  
-      </View>
-    
+            {nextProfile && (
+              <View style = {styles.nextCardContainer}> 
+                <Animated.View style = {[styles.animatedCard, nextCardStyle]}>
+                  <Card user = {nextProfile}/>
+                </Animated.View>
+              </View>
+            )}       
+            {currentProfile && (
+            <PanGestureHandler onGestureEvent = {gestureHandler}>
+              <Animated.View style = {[styles.animatedCard, cardStyle]}>
+                <Card user = {currentProfile}/>
+              </Animated.View>
+            </PanGestureHandler>
+            )}   
+          </GestureHandlerRootView>   
+    </View>
   ); 
 };
 
